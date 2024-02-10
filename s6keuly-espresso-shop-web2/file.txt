@@ -1,0 +1,123 @@
+NAME: espresso-shop-web
+LAST DEPLOYED: Sun Jan 28 22:28:38 2024
+NAMESPACE: s6keuly
+STATUS: pending-install
+REVISION: 1
+TEST SUITE: None
+HOOKS:
+MANIFEST:
+---
+# Source: s6keuly-espresso-shop-web2/templates/pdb.yaml
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: s6keuly-shop-web
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: s6keuly-shop-web
+---
+# Source: s6keuly-espresso-shop-web2/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: s6keuly-shop-web
+  labels:
+    app: s6keuly-shop-web
+---
+# Source: s6keuly-espresso-shop-web2/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: s6keuly-shop-web
+  labels:
+    app:  s6keuly-shop-web
+spec:
+  type: NodePort
+  ports:
+    - port: 8090
+      targetPort: 80
+      protocol: TCP
+      name: http
+  selector:
+    app: s6keuly-shop-web
+---
+# Source: s6keuly-espresso-shop-web2/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: s6keuly-shop-web
+  labels:
+    app: s6keuly-shop-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: s6keuly-shop-web
+  template:
+    metadata:
+      labels:
+        app: s6keuly-shop-web
+        version: v1
+    spec:
+      serviceAccountName: espresso-shop-web-s6keuly-espresso-shop-web2
+      securityContext:
+        {}
+      containers:
+        - name: s6keuly-espresso-shop-web2
+          securityContext:
+            {}
+          image: keulyt/s6keuly-espresso.web
+          imagePullPolicy: Always
+
+          env:
+            - name: ProductCatalogUrl
+              value: ProductCatalogUrl=http://espresso-shop-product-catalog-svc:8091
+            - name: ReviewsUrl
+              value: ReviewsUrl=http://espresso-shop-reviews-svc:8092
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+        #  livenessProbe:
+         #   httpGet:
+          #    path: /
+       #   port: http
+       #  readinessProbe:
+       #   httpGet:
+       #    path: /
+        #    port: http
+          resources:
+            limits:
+              cpu: 100m
+              memory: 256Mi
+            requests:
+              cpu: 50m
+              memory: 256Mi
+---
+# Source: s6keuly-espresso-shop-web2/templates/hpa.yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: s6keuly-shop-web
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: s6keuly-shop-web
+  minReplicas: 1
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50
+
+NOTES:
+1. Get the application URL by running these commands:
+  export NODE_PORT=$(kubectl get --namespace s6keuly -o jsonpath="{.spec.ports[0].nodePort}" services espresso-shop-web-s6keuly-espresso-shop-web2)
+  export NODE_IP=$(kubectl get nodes --namespace s6keuly -o jsonpath="{.items[0].status.addresses[0].address}")
+  echo http://$NODE_IP:$NODE_PORT
