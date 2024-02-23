@@ -397,7 +397,7 @@ postgresql:
   ##
   username: s6project
   password: czZwcm9qZWN0
-  database: "espresso"
+  database: espresso
   ## @param postgresql.existingSecret PostgreSQL password using existing secret
   ##
   existingSecret: ""
@@ -444,7 +444,7 @@ postgresql:
   ##
   repmgrUsername: repmgr
   repmgrPassword: ""
-  repmgrDatabase: repmgr
+  repmgrDatabase: ""
   repmgrLogLevel: NOTICE
   repmgrConnectTimeout: 5
   repmgrReconnectAttempts: 2
@@ -1354,7 +1354,7 @@ pgpool:
   ## @param pgpool.updateStrategy Strategy used to replace old Pods by new ones
   ## ref: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy
   ##
-  updateStrategy: {}
+  updateStrategy: {}pvc
   ## @param pgpool.containerPorts.postgresql Pgpool port
   ##
   containerPorts:
